@@ -1,0 +1,121 @@
+@{
+    Layout = null;
+    var controller = ViewContext.RouteData.Values["controller"].ToString();
+    var action = ViewContext.RouteData.Values["action"].ToString();
+}
+@using CabinextKioskAktarim.Services
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - Cabinext Kiosk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    @RenderSection("styles", required: false)
+</head>
+<body>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" tabindex="-1"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="justify-content: center;">
+            <a class="sidebar-brand" href="@Url.Action("Index", "Home")">
+                <img src="/Content/Images/cabinext%20logo.png" alt="Cabinext Logo" style="max-height: 40px;" />
+            </a>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="@Url.Action("Index", "Home")" class="@(controller == "Home" && action == "Index" ? "active" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    @Localization.Get("Dashboard")
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index", "Kiosk")" class="@(controller == "Kiosk" && action == "Index" ? "active" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    @Localization.Get("KioskList")
+                </a>
+            </li>
+
+        </ul>
+        
+        @if (Request.IsAuthenticated)
+        {
+            <div style="margin-top: auto; padding: 20px; border-top: 1px solid var(--border-light);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <!-- Generate avatar from username initial -->
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--brand-red); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
+                        @(User.Identity.Name.Length > 0 ? User.Identity.Name.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.2;">@User.Identity.Name</span>
+                        <span style="font-size: 12px; color: var(--text-muted); line-height: 1.2;">@Localization.Get("AdminRole")</span>
+                    </div>
+                </div>
+                <form action="@Url.Action("Logout", "Auth")" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" style="width: 100%; border: none; background: #FEE2E2; color: #DC2626; padding: 10px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        @Localization.Get("Logout")
+                    </button>
+                </form>
+            </div>
+        }
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-header">
+            <button class="menu-toggle" id="menuToggle" aria-label="Menüyü Aç">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div style="flex-grow: 1;"></div>
+        </header>
+
+        <!-- Subtle Background Illustration -->
+        <div class="illustration-bg" style="background-image: url('/Content/Images/cabinext%20arka%20plan.png'); background-size: cover; background-position: center; position: fixed; top: 0; left: 260px; right: 0; bottom: 0; z-index: -1; opacity: 0.8; pointer-events: none;"></div>
+
+        <main class="body-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var sidebar = $('#sidebar');
+            var overlay = $('#sidebarOverlay');
+            var toggle = $('#menuToggle');
+
+            function openSidebar() {
+                sidebar.addClass('open');
+                overlay.addClass('open');
+                sidebar.find('a').first().focus();
+            }
+
+            function closeSidebar() {
+                sidebar.removeClass('open');
+                overlay.removeClass('open');
+                toggle.focus();
+            }
+
+            toggle.on('click', function() {
+                openSidebar();
+            });
+
+            overlay.on('click', function() {
+                closeSidebar();
+            });
+
+            $(document).on('keydown', function(e) {
+                if (e.key === "Escape" && sidebar.hasClass('open')) {
+                    closeSidebar();
+                }
+            });
+        });
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

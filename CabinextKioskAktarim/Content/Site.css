@@ -1,0 +1,226 @@
+:root {
+    --brand-red: #E63946;
+    --brand-pink: #F9EAEA;
+    --success-green: #2A9D8F;
+    --error-red: #D62828;
+    --pending-orange: #F4A261;
+    --info-blue: #023E8A;
+    
+    --text-main: #0B2545;
+    --text-helper: #6C757D;
+    
+    --bg-page: #F8F9FA;
+    --bg-card: #FFFFFF;
+    --border-thin: #DEE2E6;
+    
+    --spacing-1: 8px;
+    --spacing-2: 16px;
+    --spacing-3: 24px;
+    --spacing-4: 32px;
+    
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 260px;
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border-thin);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-3);
+    border-bottom: 1px solid var(--border-thin);
+}
+
+.sidebar-brand {
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--brand-red);
+    text-decoration: none;
+}
+.sidebar-brand:hover {
+    color: var(--error-red);
+    text-decoration: none;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: var(--spacing-2) 0;
+    margin: 0;
+    flex: 1;
+}
+
+.sidebar-menu li {
+    margin: 0;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-2) var(--spacing-3);
+    color: var(--text-helper);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.sidebar-menu a svg {
+    margin-right: var(--spacing-1);
+    stroke: var(--text-helper);
+    transition: stroke 0.2s;
+}
+
+.sidebar-menu a:hover, .sidebar-menu a:focus {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    text-decoration: none;
+    outline: none;
+}
+.sidebar-menu a:hover svg, .sidebar-menu a:focus svg {
+    stroke: var(--text-main);
+}
+
+.sidebar-menu a.active {
+    background-color: var(--brand-pink);
+    color: var(--brand-red);
+    border-left-color: var(--brand-red);
+    font-weight: 600;
+}
+
+.sidebar-menu a.active svg {
+    stroke: var(--brand-red);
+}
+
+/* Main workspace */
+.main-wrapper {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: calc(100% - 260px);
+}
+
+.top-header {
+    height: 60px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-thin);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-3);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--spacing-1);
+    margin-right: var(--spacing-2);
+}
+
+.menu-toggle svg {
+    stroke: var(--text-main);
+}
+.menu-toggle:focus {
+    outline: 2px solid var(--brand-red);
+    border-radius: var(--radius-sm);
+}
+
+/* Large field illustrations background */
+.illustration-bg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.03;
+    z-index: -1;
+    pointer-events: none;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.body-content {
+    padding: var(--spacing-3);
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-thin);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Override input sizes */
+input, select, textarea {
+    max-width: 100%;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .main-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+    .menu-toggle {
+        display: block;
+    }
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(11,37,69,0.5); /* text-main with opacity */
+        z-index: 999;
+    }
+    .sidebar-overlay.open {
+        display: block;
+    }
+}
+
+@media (max-width: 390px) {
+    .body-content {
+        padding: var(--spacing-2);
+    }
+}

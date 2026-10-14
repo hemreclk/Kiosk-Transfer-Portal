@@ -1,0 +1,68 @@
+# ==============================================================================
+# .gitignore for Cabinext Kiosk Aktarim (.NET Framework / Visual Studio / MySQL)
+# ==============================================================================
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio build artifacts
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rms/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+_UpgradeReport_Files/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceStore/
+
+# Visual Studio 2015+ cache directory
+.vs/
+
+# NuGet Packages directory (Dependencies should be restored via nuget restore)
+**/packages/*
+!**/packages/repositories.config
+*.nuget.props
+*.nuget.targets
+
+# Test Results & Profiler
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.visualstudio.diagnostics
+*.coverage
+*.coveragexml
+
+# Temporary and Scratch Directories
+scratch/
+[Tt]emp/
+[Tt]mp/
+
+# Local Environment Secrets & Overrides
+*.local.config
+*.secrets.config
+Web.secrets.config
+
+# Log files
+*.log
+*.sqlite
+*.db
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

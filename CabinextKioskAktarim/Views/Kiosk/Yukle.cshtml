@@ -1,0 +1,628 @@
+@{
+    ViewBag.Title = "CSV Kiosk Aktarımı";
+    int currentStage = ViewBag.Asama != null ? (int)ViewBag.Asama : 0;
+    string fileName = ViewBag.FileName as string;
+    var satirlar = ViewBag.Satirlar as System.Collections.Generic.List<CabinextKioskAktarim.Models.KioskCsvSatiri>;
+}
+
+@section styles {
+    <style>
+        .page-header {
+            margin-bottom: var(--spacing-3);
+        }
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0 0 8px 0;
+        }
+        .page-header p {
+            color: var(--text-helper);
+            margin: 0;
+        }
+        .icon-doc {
+            color: var(--brand-red);
+            background-color: var(--brand-pink);
+            padding: 8px;
+            border-radius: var(--radius-md);
+        }
+
+        .upload-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-thin);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-4);
+            margin-bottom: var(--spacing-3);
+        }
+        
+        .drop-zone {
+            border: 2px dashed #CBD5E1;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-5) var(--spacing-3);
+            text-align: center;
+            transition: all 0.2s;
+            background-color: #F8FAFC;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--brand-red);
+            background-color: var(--brand-pink);
+        }
+        .drop-zone-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            color: #94A3B8;
+        }
+        .drop-zone-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .drop-zone-desc {
+            font-size: 13px;
+            color: var(--text-helper);
+            margin-bottom: 16px;
+        }
+        
+        .btn-select {
+            background-color: var(--brand-red);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-select:hover, .btn-select:focus {
+            background-color: var(--error-red);
+            outline: none;
+        }
+        .btn-select:disabled {
+            background-color: #94A3B8;
+            cursor: not-allowed;
+        }
+
+        .file-info-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border: 1px solid var(--border-thin);
+            border-radius: var(--radius-md);
+            background-color: var(--bg-card);
+            margin-bottom: var(--spacing-3);
+        }
+        .file-details {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .file-icon {
+            color: var(--text-helper);
+            background: #F1F5F9;
+            padding: 12px;
+            border-radius: var(--radius-md);
+        }
+        .detail-item p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-helper);
+        }
+        .detail-item h4 {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .file-actions {
+            display: flex;
+            gap: 16px;
+        }
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--error-red);
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .btn-text:hover {
+            text-decoration: underline;
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: var(--spacing-4);
+            padding: 0 24px;
+        }
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background-color: var(--border-thin);
+            z-index: 1;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 120px;
+        }
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            background-color: white;
+            border: 2px solid var(--border-thin);
+            color: var(--text-helper);
+        }
+        .step-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-helper);
+            text-align: center;
+        }
+        
+        .step.completed .step-circle {
+            background-color: var(--success-green);
+            border-color: var(--success-green);
+            color: white;
+        }
+        .step.completed .step-title {
+            color: var(--success-green);
+        }
+        .step.active .step-circle {
+            background-color: var(--brand-red);
+            border-color: var(--brand-red);
+            color: white;
+        }
+        .step.active .step-title {
+            color: var(--text-main);
+        }
+
+        /* Table */
+        .preview-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-thin);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-3);
+        }
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: var(--spacing-3);
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-custom th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-helper);
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-thin);
+            white-space: nowrap;
+        }
+        .table-custom td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-thin);
+            font-size: 13px;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-success { background-color: #E6F4EA; color: var(--success-green); }
+        .badge-error { background-color: #FCE8E8; color: var(--error-red); }
+        .badge-warning { background-color: #FEF0E6; color: var(--pending-orange); }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-top: var(--spacing-3);
+            padding-top: var(--spacing-3);
+            border-top: 1px solid var(--border-thin);
+        }
+        .btn-outline {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border-thin);
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-outline:hover {
+            background-color: var(--bg-page);
+        }
+        .btn-success {
+            background-color: var(--success-green);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-success:hover {
+            background-color: #218579;
+        }
+        .btn-success:disabled, .btn-outline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert-box {
+            background-color: #FCE8E8;
+            border: 1px solid #F5C6C6;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-2) var(--spacing-3);
+            display: flex;
+            gap: 12px;
+            margin-bottom: var(--spacing-3);
+            align-items: center;
+        }
+        .alert-box p {
+            color: #9C1A1A;
+            font-size: 13px;
+            margin: 0;
+            font-weight: 500;
+        }
+        .alert-success {
+            background-color: #E6F4EA;
+            border-color: #C3E6CB;
+        }
+        .alert-success p { color: #155724; }
+        
+        .hidden { display: none !important; }
+    </style>
+}
+
+<div class="page-header">
+    <h1>
+        <span class="icon-doc">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </span>
+        CSV Kiosk Aktarımı
+    </h1>
+    <p>Teslim edilmiş kiosk kayıtlarını CSV dosyasından sisteme aktarın.</p>
+</div>
+
+@if (ViewBag.Hata != null)
+{
+    <div class="alert-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <p>@ViewBag.Hata</p>
+    </div>
+}
+@if (ViewBag.Tamamlandi != null && ViewBag.Tamamlandi == true)
+{
+    <div class="alert-box alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:#155724"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <p>Aktarım işlemi tamamlandı. Toplam @ViewBag.Toplam satır işlendi, @ViewBag.Eklenen kayıt eklendi.</p>
+    </div>
+}
+
+@if (currentStage == 0)
+{
+    <!-- File Selection Stage -->
+    <div class="upload-card">
+        <form id="uploadForm" action="@Url.Action("YukleKontrol", "Kiosk")" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="drop-zone" id="dropZone" tabindex="0">
+                <svg class="drop-zone-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+                <div class="drop-zone-title">CSV dosyanızı buraya sürükleyin veya dosya seçin.</div>
+                <div class="drop-zone-desc">Beklenen alanlar: Dkodu, MKodu, KabinD, KioskD, CustCode<br/>(Yalnızca .csv dosyası, Maksimum 2 MB)</div>
+                <input type="file" name="dosya" id="dosyaInput" accept=".csv" class="hidden" />
+                <button type="button" class="btn-select" id="btnSelectFile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Dosya Seç
+                </button>
+            </div>
+            <div id="selectedFileContainer" class="hidden" style="margin-top:24px; text-align:right;">
+                <p id="selectedFileNameText" style="font-weight:600; display:inline-block; margin-right:16px;"></p>
+                <button type="submit" class="btn-select" id="btnUploadSubmit">
+                    Verileri Kontrol Et
+                </button>
+            </div>
+        </form>
+    </div>
+}
+else
+{
+    <!-- File Details Card (Visible after validation or completion) -->
+    <div class="file-info-card">
+        <div class="file-details">
+            <div class="file-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </div>
+            <div class="detail-item">
+                <p>Dosya adı</p>
+                <h4>@fileName</h4>
+            </div>
+            <div class="detail-item">
+                <p>Toplam satır</p>
+                <h4>@(satirlar != null ? satirlar.Count : 0)</h4>
+            </div>
+            <div class="detail-item">
+                <p>Durum</p>
+                <h4>
+                    @if(currentStage == 3) {
+                        <span style="color:var(--pending-orange); display:flex; align-items:center; gap:4px;">
+                            <span class="status-dot" style="background-color:var(--pending-orange); width:8px; height:8px; border-radius:50%; display:inline-block;"></span> 
+                            Önizlemeye Hazır
+                        </span>
+                    } else if (currentStage == 4) {
+                        <span style="color:var(--success-green); display:flex; align-items:center; gap:4px;">
+                            <span class="status-dot" style="background-color:var(--success-green); width:8px; height:8px; border-radius:50%; display:inline-block;"></span> 
+                            Aktarıldı
+                        </span>
+                    }
+                </h4>
+            </div>
+        </div>
+        <div class="file-actions">
+            <a href="@Url.Action("Yukle", "Kiosk")" class="btn-text">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Dosyayı Kaldır
+            </a>
+        </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+        <div class="step completed">
+            <div class="step-circle"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+            <div class="step-title">Dosya Seçildi</div>
+        </div>
+        <div class="step completed">
+            <div class="step-circle"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+            <div class="step-title">CSV Okundu</div>
+        </div>
+        <div class="step @(currentStage == 3 ? "active" : "completed")">
+            <div class="step-circle">
+                @if(currentStage > 3){
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                }else{
+                    <text>3</text>
+                }
+            </div>
+            <div class="step-title">Satırlar Kontrol Edildi</div>
+        </div>
+        <div class="step @(currentStage == 4 ? "completed" : "")">
+            <div class="step-circle">
+                @if(currentStage == 4){
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                }else{
+                    <text>4</text>
+                }
+            </div>
+            <div class="step-title">Aktarım Tamamlandı</div>
+        </div>
+    </div>
+
+    <!-- Preview Table -->
+    <div class="preview-panel">
+        <div class="preview-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            CSV Önizleme
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Satır</th>
+                        <th>Durum</th>
+                        <th>Dkodu</th>
+                        <th>MKodu</th>
+                        <th>KabinD</th>
+                        <th>KioskD</th>
+                        <th>CustCode</th>
+                        <th>Açıklama</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(satirlar != null && satirlar.Count > 0)
+                    {
+                        foreach(var s in satirlar)
+                        {
+                            <tr>
+                                <td>@s.SatirNo</td>
+                                <td>
+                                    @if(string.IsNullOrEmpty(s.Hata))
+                                    {
+                                        if (currentStage == 4) {
+                                            <span class="badge badge-success"><span class="status-dot"></span> Başarılı</span>
+                                        } else {
+                                            <span class="badge badge-success"><span class="status-dot"></span> Aktarıma Uygun</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-error"><span class="status-dot"></span> Hatalı</span>
+                                    }
+                                </td>
+                                <td>@s.Dkodu</td>
+                                <td>@s.MKodu</td>
+                                <td>@s.KabinD</td>
+                                <td>@s.KioskD</td>
+                                <td>@s.CustCode</td>
+                                <td style="color: @(string.IsNullOrEmpty(s.Hata) ? "var(--text-helper)" : "var(--error-red)");">
+                                    @(string.IsNullOrEmpty(s.Hata) ? "—" : s.Hata)
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-helper);">Kayıt bulunamadı.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if(currentStage == 3)
+        {
+            <div class="action-bar">
+                <a href="@Url.Action("Yukle", "Kiosk")" class="btn-outline">İptal</a>
+                
+                <form action="@Url.Action("YukleTamamla", "Kiosk")" method="post" id="completeForm" onsubmit="return handleFormSubmit(this);">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-success" id="btnSubmitComplete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg>
+                        Aktarıma Devam Et
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+}
+
+@section scripts {
+    <script>
+        function handleFormSubmit(form) {
+            var btn = $(form).find('button[type="submit"]');
+            if (btn.prop('disabled')) return false;
+            
+            btn.prop('disabled', true);
+            var originalText = btn.html();
+            btn.html('<svg class="spinner" viewBox="0 0 50 50" style="width:18px;height:18px;animation:spin 1s linear infinite;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="1,200" stroke-dashoffset="0" style="stroke-linecap:round; animation:dash 1.5s ease-in-out infinite;"/></svg> Yükleniyor...');
+            
+            return true;
+        }
+
+        $(document).ready(function () {
+            var dropZone = $('#dropZone');
+            var input = $('#dosyaInput');
+            var btnSelect = $('#btnSelectFile');
+            var selectedFileContainer = $('#selectedFileContainer');
+            var selectedFileNameText = $('#selectedFileNameText');
+
+            if (btnSelect.length > 0) {
+                btnSelect.on('click', function (e) {
+                    e.preventDefault();
+                    input[0].click();
+                });
+                
+                dropZone.on('click', function(e) {
+                    if (e.target !== btnSelect[0] && e.target !== input[0]) {
+                        input[0].click();
+                    }
+                });
+
+                input.on('change', function () {
+                    handleFiles(this.files);
+                });
+
+                dropZone.on('dragover', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.addClass('dragover');
+                });
+
+                dropZone.on('dragleave', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.removeClass('dragover');
+                });
+
+                dropZone.on('drop', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.removeClass('dragover');
+                    
+                    var dt = e.originalEvent.dataTransfer;
+                    if (dt.files && dt.files.length > 0) {
+                        input[0].files = dt.files;
+                        handleFiles(dt.files);
+                    }
+                });
+            }
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    var f = files[0];
+                    if (!f.name.toLowerCase().endsWith('.csv')) {
+                        alert('Lütfen yalnızca .csv uzantılı dosya seçin.');
+                        input.val('');
+                        return;
+                    }
+                    if (f.size > 2 * 1024 * 1024) {
+                        alert('Dosya boyutu 2 MB limitini aşıyor.');
+                        input.val('');
+                        return;
+                    }
+                    
+                    selectedFileNameText.text("Seçilen Dosya: " + f.name);
+                    selectedFileContainer.removeClass('hidden');
+                    dropZone.css('border-color', 'var(--success-green)');
+                }
+            }
+
+            $('#uploadForm').on('submit', function(e) {
+                return handleFormSubmit(this);
+            });
+        });
+    </script>
+    <style>
+        @@keyframes spin { 100% { transform:rotate(360deg); } }
+        @@keyframes dash { 
+            0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 90, 200; stroke-dashoffset: -35px; }
+            100% { stroke-dasharray: 90, 200; stroke-dashoffset: -124px; }
+        }
+    </style>
+}

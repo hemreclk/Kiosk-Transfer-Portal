@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Web.config.example: Template configuration for deployment.
+  Copy this file to Web.config and fill in your actual environment secrets.
+-->
+<configuration>
+  <connectionStrings>
+    <!-- Primary operational database connection string -->
+    <add name="CabinextLocal"
+         connectionString="Server=127.0.0.1;Port=3306;Database=cabinext;Uid=YOUR_DB_USER;Pwd=YOUR_DB_PASSWORD;"
+         providerName="MySql.Data.MySqlClient" />
+    
+    <!-- Error logging and audit database connection string -->
+    <add name="CabinextLogs"
+         connectionString="Server=127.0.0.1;Port=3306;Database=cabinext_logs;Uid=YOUR_DB_USER;Pwd=YOUR_DB_PASSWORD;"
+         providerName="MySql.Data.MySqlClient" />
+  </connectionStrings>
+
+  <appSettings>
+    <add key="webpages:Version" value="3.0.0.0" />
+    <add key="webpages:Enabled" value="false" />
+    <add key="ClientValidationEnabled" value="true" />
+    <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+    
+    <!-- Local Administration Credentials (CHANGE THESE IN PRODUCTION) -->
+    <add key="AdminUsername" value="admin" />
+    <add key="AdminPassword" value="YOUR_STRONG_PASSWORD_HERE" />
+    
+    <!-- External Cabinext OAuth API Endpoints -->
+    <add key="CabinextApiBaseUrl" value="https://api.yourdomain.com/" />
+    <add key="CabinextTokenUrl" value="https://api.yourdomain.com/api/token" />
+    <add key="CabinextClientId" value="YOUR_CLIENT_ID" />
+  </appSettings>
+
+  <system.web>
+    <authentication mode="Forms">
+      <forms loginUrl="~/Auth/Login" timeout="2880" />
+    </authentication>
+    <globalization fileEncoding="utf-8" requestEncoding="utf-8" responseEncoding="utf-8" culture="tr-TR" uiCulture="tr-TR" />
+    <compilation debug="false" targetFramework="4.7.2" />
+    <httpRuntime targetFramework="4.7.2" />
+  </system.web>
+</configuration>

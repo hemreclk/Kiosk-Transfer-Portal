@@ -1,0 +1,378 @@
+@using System.Linq
+@model CabinextKioskAktarim.Models.KioskListeModeli
+
+@{
+    ViewBag.Title = CabinextKioskAktarim.Services.Localization.Get("KioskList");
+    bool hasAnyFilters = !string.IsNullOrEmpty(Model.Barkod) || 
+                         !string.IsNullOrEmpty(Model.Distributor) || 
+                         !string.IsNullOrEmpty(Model.Musteri) || 
+                         !string.IsNullOrEmpty(Model.Depo);
+}
+
+@section styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-4);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+        .btn-primary {
+            background-color: var(--brand-red);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover { background-color: var(--error-red); color: white; text-decoration: none; }
+        
+        .filter-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-thin);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-4);
+            margin-bottom: var(--spacing-4);
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+        .form-group {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .form-control {
+            border: 1px solid #CBD5E1;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--brand-red);
+            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-helper);
+            border: 1px solid var(--border-thin);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-outline:hover { background-color: var(--bg-page); color: var(--text-main); }
+        .btn-submit {
+            background-color: var(--text-main);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-submit:hover { background-color: #1e293b; }
+
+        .table-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-thin);
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+        .table-custom th {
+            text-align: left;
+            padding: 12px 16px;
+            color: var(--text-helper);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-thin);
+            background: #F8FAFC;
+        }
+        .table-custom td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-thin);
+            font-size: 13px;
+            color: var(--text-main);
+        }
+        .table-custom tbody tr:hover {
+            background-color: #F8FAFC;
+        }
+        
+        .code-cell {
+            font-family: monospace;
+            background-color: #F1F5F9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #334155;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-success { background-color: #E6F4EA; color: var(--success-green); }
+        .badge-error { background-color: #FCE8E8; color: var(--error-red); }
+        .badge-blue { background-color: #E0F2FE; color: #0369A1; }
+        .badge-warning { background-color: #FEF3C7; color: #D97706; }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+        }
+        .empty-state-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background-color: #F1F5F9;
+            color: #94A3B8;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0 0 8px 0;
+        }
+        .empty-state p {
+            color: var(--text-helper);
+            font-size: 14px;
+            margin: 0 0 24px 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background-color: white;
+            border-top: 1px solid var(--border-thin);
+        }
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-helper);
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-thin);
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+        .page-btn:hover {
+            background-color: #F8FAFC;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .page-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .action-link {
+            color: var(--brand-red);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .action-link:hover { text-decoration: underline; color: var(--error-red); }
+    </style>
+}
+
+<div class="page-header">
+    <h1>@CabinextKioskAktarim.Services.Localization.Get("KioskList")</h1>
+    @if (TempData["Basari"] != null)
+    {
+        <div style="background-color: #E6F4EA; border: 1px solid #C3E6CB; border-radius: var(--radius-md); padding: var(--spacing-2) var(--spacing-3); display: flex; gap: 12px; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:#155724"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <p style="color: #155724; font-size: 13px; margin: 0; font-weight: 500;">@TempData["Basari"]</p>
+        </div>
+    }
+</div>
+
+<div class="filter-card">
+    <form method="get" action="@Url.Action("Index", "Kiosk")">
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <div style="flex-grow: 1; position: relative;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-helper)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" name="barkod" id="barkod" class="form-control" style="width: 100%; padding-left: 48px; height: 48px; font-size: 15px;" placeholder="@CabinextKioskAktarim.Services.Localization.Get("SearchPlaceholder")" value="@Model.Barkod" />
+            </div>
+            <button type="submit" class="btn-primary" style="height: 48px; border-radius: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                @CabinextKioskAktarim.Services.Localization.Get("Filter")
+            </button>
+            <a href="@Url.Action("Index", "Kiosk")" class="btn-outline" style="height: 48px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; border: none; background-color: #F1F5F9;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.5l1.25 1.93"></path></svg>
+                @CabinextKioskAktarim.Services.Localization.Get("Clear")
+            </a>
+        </div>
+        
+        <div class="filter-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="form-group">
+                <label for="distributor" class="form-label">@CabinextKioskAktarim.Services.Localization.Get("DistributorCode")</label>
+                <input type="text" name="distributor" id="distributor" class="form-control" placeholder="@CabinextKioskAktarim.Services.Localization.Get("Select")" value="@Model.Distributor" />
+            </div>
+            <div class="form-group">
+                <label for="musteri" class="form-label">@CabinextKioskAktarim.Services.Localization.Get("CustomerCode")</label>
+                <input type="text" name="musteri" id="musteri" class="form-control" placeholder="@CabinextKioskAktarim.Services.Localization.Get("Select")" value="@Model.Musteri" />
+            </div>
+            <div class="form-group">
+                <label for="baslangicTarihi" class="form-label">@CabinextKioskAktarim.Services.Localization.Get("StartDate")</label>
+                <input type="date" name="baslangicTarihi" id="baslangicTarihi" class="form-control" value="@(Model.BaslangicTarihi.HasValue ? Model.BaslangicTarihi.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="form-group">
+                <label for="bitisTarihi" class="form-label">@CabinextKioskAktarim.Services.Localization.Get("EndDate")</label>
+                <input type="date" name="bitisTarihi" id="bitisTarihi" class="form-control" value="@(Model.BitisTarihi.HasValue ? Model.BitisTarihi.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    @if (Model.Kayitlar != null && Model.Kayitlar.Any())
+    {
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("Barcode") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("KioskCode") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("Distributor") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("Customer") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("Warehouse") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("TransferStatus") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th>@CabinextKioskAktarim.Services.Localization.Get("TransferDate") <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; margin-left:4px;"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></th>
+                    <th style="text-align: center;">@CabinextKioskAktarim.Services.Localization.Get("Action")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Kayitlar)
+                {
+                    <tr>
+                        <td style="font-weight: 600; color: var(--brand-red);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="5" y1="3" x2="5" y2="21"></line><line x1="19" y1="3" x2="19" y2="21"></line></svg>
+                            @(string.IsNullOrEmpty(r.Barcode) ? r.Code : r.Barcode)
+                        </td>
+                        <td><span class="code-cell">@r.Code</span></td>
+                        <td>@(string.IsNullOrEmpty(r.RLocCode) ? "-" : r.RLocCode)</td>
+                        <td>@(string.IsNullOrEmpty(r.RCustCode) ? "-" : r.RCustCode)</td>
+                        <td>@(string.IsNullOrEmpty(r.WhCode) ? "-" : r.WhCode)</td>
+                        <td>
+                            <span class="badge badge-@r.AktarimDurumuRenk" style="padding: 4px 10px;">
+                                @if (r.AktarimDurumuRenk == "success") { <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> }
+                                else if (r.AktarimDurumuRenk == "error") { <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> }
+                                else if (r.AktarimDurumuRenk == "blue") { <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> }
+                                else if (r.AktarimDurumuRenk == "warning") { <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M2 12h4l2-9 4 18 2-9h4"></path></svg> }
+                                @r.AktarimDurumu
+                            </span>
+                        </td>
+                        <td>@(r.CreatedOn.HasValue ? r.CreatedOn.Value.ToString("dd.MM.yyyy HH:mm") : "-")</td>
+                        <td style="text-align: center;">
+                            <a href="@Url.Action("Detay", "Kiosk", new { id = r.Code })" class="btn-outline" style="padding: 4px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 20px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                @CabinextKioskAktarim.Services.Localization.Get("Detail")
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Toplam <strong>@Model.Toplam</strong> kayıttan <strong>@(((Model.Sayfa - 1) * Model.SayfaBoyutu) + 1) - @Math.Min(Model.Sayfa * Model.SayfaBoyutu, Model.Toplam)</strong> arası gösteriliyor.
+            </div>
+            @if (Model.ToplamSayfa > 1)
+            {
+                <div class="pagination-controls">
+                    <a href="@Url.Action("Index", "Kiosk", new { barkod = Model.Barkod, distributor = Model.Distributor, musteri = Model.Musteri, depo = Model.Depo, baslangicTarihi = Model.BaslangicTarihi?.ToString("yyyy-MM-dd"), bitisTarihi = Model.BitisTarihi?.ToString("yyyy-MM-dd"), sayfa = Model.Sayfa - 1 })" 
+                       class="page-btn @(Model.Sayfa <= 1 ? "disabled" : "")">
+                       @CabinextKioskAktarim.Services.Localization.Get("Previous")
+                    </a>
+                    
+                    <span style="display:inline-flex; align-items:center; font-size:13px; font-weight:600; padding: 0 8px; color: var(--text-main);">
+                        @CabinextKioskAktarim.Services.Localization.Get("Page") @Model.Sayfa / @Model.ToplamSayfa
+                    </span>
+                    
+                    <a href="@Url.Action("Index", "Kiosk", new { barkod = Model.Barkod, distributor = Model.Distributor, musteri = Model.Musteri, depo = Model.Depo, baslangicTarihi = Model.BaslangicTarihi?.ToString("yyyy-MM-dd"), bitisTarihi = Model.BitisTarihi?.ToString("yyyy-MM-dd"), sayfa = Model.Sayfa + 1 })" 
+                       class="page-btn @(Model.Sayfa >= Model.ToplamSayfa ? "disabled" : "")">
+                       @CabinextKioskAktarim.Services.Localization.Get("Next")
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            </div>
+            
+            @if(hasAnyFilters) {
+                <h3>@CabinextKioskAktarim.Services.Localization.Get("NoResult")</h3>
+                <p>@CabinextKioskAktarim.Services.Localization.Get("NoResultDesc")</p>
+                <a href="@Url.Action("Index", "Kiosk")" class="btn-outline">@CabinextKioskAktarim.Services.Localization.Get("ClearFilters")</a>
+            } else {
+                <h3>@CabinextKioskAktarim.Services.Localization.Get("NoKioskSystem")</h3>
+                <p>@CabinextKioskAktarim.Services.Localization.Get("NoKioskDesc")</p>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,174 @@
+@model List<CabinextKioskAktarim.Models.FailedKioskSummary>
+
+@{
+    ViewBag.Title = CabinextKioskAktarim.Services.Localization.Get("ErrorRecords");
+}
+@using CabinextKioskAktarim.Services
+
+@section styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-3);
+        }
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-header p {
+            color: var(--text-helper);
+            margin: 0;
+        }
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .table-custom th {
+            text-align: left;
+            padding: 12px 16px;
+            color: var(--text-helper);
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-thin);
+            background: #F9FAFB;
+        }
+        .table-custom td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-thin);
+            font-size: 14px;
+            color: var(--text-main);
+            vertical-align: top;
+        }
+        .table-custom tr:last-child td {
+            border-bottom: none;
+        }
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            color: var(--text-helper);
+        }
+        .btn-icon:hover {
+            background: #F3F4F6;
+            color: var(--text-main);
+        }
+        .btn-icon.delete:hover {
+            background: #FCE8E8;
+            color: var(--error-red);
+        }
+        .error-message {
+            color: var(--error-red);
+            font-size: 13px;
+            font-weight: 500;
+            display: block;
+            margin-top: 4px;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            @Localization.Get("AllErrorRecords")
+        </h1>
+        <p>@Localization.Get("ErrorRecordsDesc")</p>
+    </div>
+    <a href="@Url.Action("Index", "Home")" style="color: var(--text-helper); font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        @Localization.Get("ReturnToDashboard")
+    </a>
+</div>
+
+@if (TempData["Hata"] != null)
+{
+    <div style="background-color: #FCE8E8; border: 1px solid #F5C6C6; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; color: var(--error-red); display: flex; align-items: center; gap: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>@TempData["Hata"]</span>
+    </div>
+}
+
+@if (TempData["Basari"] != null)
+{
+    <div style="background-color: #E6F4EA; border: 1px solid #C3E6CB; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; color: var(--success-green); display: flex; align-items: center; gap: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>@TempData["Basari"]</span>
+    </div>
+}
+
+<div style="overflow-x: auto;">
+    <table class="table-custom">
+        <thead>
+            <tr>
+                <th style="width: 50px;">#</th>
+                <th>@Localization.Get("KioskCode")</th>
+                <th>@Localization.Get("Customer") / @Localization.Get("Warehouse")</th>
+                <th>@Localization.Get("ErrorReason")</th>
+                <th>@Localization.Get("Date")</th>
+                <th style="width: 80px; text-align: center;">@Localization.Get("Action")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Count > 0)
+            {
+                int index = 1;
+                foreach(var k in Model)
+                {
+                    <tr>
+                        <td style="color: var(--text-helper);">@index</td>
+                        <td style="font-weight: 600;">@k.KioskCode</td>
+                        <td>
+                            <div>M: @(string.IsNullOrEmpty(k.CustomerCode) ? "-" : k.CustomerCode)</div>
+                            <div style="color: var(--text-helper); font-size: 13px;">D: @(string.IsNullOrEmpty(k.WarehouseCode) ? "-" : k.WarehouseCode)</div>
+                        </td>
+                        <td>
+                            <span class="error-message">@k.ErrorMessage</span>
+                        </td>
+                        <td style="color: var(--text-helper);">
+                            @(k.FailedAt.HasValue ? k.FailedAt.Value.ToString("dd.MM.yyyy HH:mm") : "-")
+                        </td>
+                        <td style="text-align: center; display: flex; gap: 4px; justify-content: center;">
+                            <a href="@Url.Action("Detay", "Kiosk", new { id = k.KioskCode })" class="btn-icon" title="Detay" style="text-decoration: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </a>
+                            <form action="@Url.Action("SilHatali", "Kiosk")" method="post" onsubmit="return confirm('@Localization.Get("DeleteConfirm")');" style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="kioskCode" value="@k.KioskCode" />
+                                <button type="submit" class="btn-icon delete" title="Sil">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    index++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-helper);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <p style="margin: 0; font-size: 16px;">@Localization.Get("NoErrorRecords")</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
